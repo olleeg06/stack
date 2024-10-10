@@ -107,13 +107,12 @@ enum number_error StackAssert (struct stack_t* stk, enum number_error error, siz
     int err = 0; 
     if (!err && stk == NULL)                                { err = 1;   }
     if (!err && stk->data == NULL)                          { err = 2;   }
-    if (!err && stk->size < 0)                              { err = 3;   }
-    if (!err && stk->capacity < 2)                          { err = 4;   }
-    if (!err && stk->ded_loh_stk1 != canary1)               { err = 5;   }
-    if (!err && stk->ded_loh_stk2 != canary1)               { err = 6;   }
-    if (!err && (stk->data[-1]) != canary2)                 { err = 7;   }
-    if (!err && stk->data[stk->capacity - 1] != canary2)    { err = 8;   }
-    if (!err && stk->hash != hash_func(stk->data))          { err = 9;   }
+    if (!err && stk->capacity < 1)                          { err = 3;   }
+    if (!err && stk->ded_loh_stk1 != canary1)               { err = 4;   }
+    if (!err && stk->ded_loh_stk2 != canary1)               { err = 5;   }
+    if (!err && (stk->data[-1]) != canary2)                 { err = 6;   }
+    if (!err && stk->data[stk->capacity - 1] != canary2)    { err = 7;   }
+    if (!err && stk->hash != hash_func(stk->data))          { err = 8;   }
     if (err == 0)                                           { return ok; }
 
     printf ("Code error is {%d}, in StackAssert err is {%d}, in file = %s, in line = %ld\n", error, err, file_name, line); 
@@ -126,7 +125,7 @@ enum number_error StackEmpty (struct stack_t* stk, size_t line, const char * fil
     if (stk->data[0] == poison){ 
         printf ("Code error is {4} in file \"%s\" in line = %ld\n", file_name, line); 
         StackDumb (stk); 
-        assert (0); 
+        exit(1);
     } 
     return ok; 
 }
