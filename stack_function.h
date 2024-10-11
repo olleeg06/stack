@@ -2,7 +2,7 @@
 #define MOEW
 #include <stdio.h> 
 
-#define NUM_BUCKETS 8
+#define NUM_BUCKETS 10000
 typedef double stack_elem_t;
 
 enum number_error { 
