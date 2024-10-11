@@ -15,21 +15,22 @@ enum number_error StackCtor (struct stack_t* stk, size_t size_capacity){
     stk->capacity = size_capacity; 
     stk->data = (stack_elem_t*) calloc (stk->capacity * sizeof(stack_elem_t) + 2 * sizeof(canary2), 1);
     
-    stk->data[0] = canary2;   
+    stk->data[0] = canary2;
     stk->data = stk->data + 1;
-    stk->capacity = stk->capacity + 1;
+    stk->capacity = stk->capacity;
 
-    stk->size = 0; 
+    stk->size = 0;
     stk->ded_loh_stk1 = canary1;
     stk->ded_loh_stk2 = canary1;
     stk->hash = hash_func(stk->data);
-    for (int i = 0; i < stk->capacity; i++){ 
-        stk->data[i] = poison; 
-    } 
-    stk->data[stk->capacity - 1] = canary2;
+    for (int i = 0; i < stk->capacity; i++){
+        stk->data[i] = poison;
+    }
+    stk->data[stk->capacity] = canary2;
     stk->hash = hash_func(stk->data);
    
     StackAssert (stk, error_ctor, __LINE__, __FILE__);
+    
     return ok;
 }
 
@@ -46,10 +47,10 @@ enum number_error StackPush (struct stack_t *stk, stack_elem_t value){
         stk->data[0] = canary2;   
         stk->data = stk->data + 1;
 
-        for (int i = stk->size; i < stk->capacity - 1; i++){ 
+        for (int i = stk->size; i < stk->capacity; i++){ 
             stk->data[i] = poison; 
         } 
-        stk->data[stk->capacity - 1] = canary2;
+        stk->data[stk->capacity] = canary2;
     } 
     
     stk->data[stk->size] = value; 
@@ -69,7 +70,6 @@ enum number_error StackPop (struct stack_t *stk, stack_elem_t *value){
     stk->size--; 
     *value = stk->data[stk->size]; 
 
-    printf ("Elem = %0.2f\n", *value); 
     stk->data[stk->size] = poison; 
     if (stk->size < (stk->capacity) / 4){ 
         stk->capacity = (stk->capacity) / 4;   
@@ -77,7 +77,7 @@ enum number_error StackPop (struct stack_t *stk, stack_elem_t *value){
         
         stk->data[0] = canary2;   
         stk->data = stk->data + 1;
-        stk->data[stk->capacity - 1] = canary2; 
+        stk->data[stk->capacity] = canary2; 
     }  
     stk->hash = hash_func(stk->data);
  
@@ -94,6 +94,7 @@ void StackDumb (struct stack_t* stk){
     printf ("canary_stk_r = %lld, &canary_stk_r = %p\n", stk->ded_loh_stk2, &stk->ded_loh_stk2);
     printf ("hash_func = %lu, hash = %lu, &hash = %p\n", hash_func(stk->data), stk->hash, &stk->hash);
     printf ("canary_data_l = %lf, &canary_data_l = %p\n", *(stk->data - 1), stk->data - 1);
+    printf ("canary_data_r = %lf, &canary_data_r = %p\n", stk->data[stk->capacity], &stk->data[stk->capacity]);
     
     for (size_t i = 0; i < stk->capacity; i++){ 
         printf ("{%lu} value = %lf, &value = %p\n", i, stk->data[i], &stk->data[i]); 
@@ -105,15 +106,16 @@ void StackDumb (struct stack_t* stk){
 
 enum number_error StackAssert (struct stack_t* stk, enum number_error error, size_t line, const char * file_name){ 
     int err = 0; 
-    if (!err && stk == NULL)                                { err = 1;   }
-    if (!err && stk->data == NULL)                          { err = 2;   }
-    if (!err && stk->capacity < 1)                          { err = 3;   }
-    if (!err && stk->ded_loh_stk1 != canary1)               { err = 4;   }
-    if (!err && stk->ded_loh_stk2 != canary1)               { err = 5;   }
-    if (!err && (stk->data[-1]) != canary2)                 { err = 6;   }
-    if (!err && stk->data[stk->capacity - 1] != canary2)    { err = 7;   }
-    if (!err && stk->hash != hash_func(stk->data))          { err = 8;   }
-    if (err == 0)                                           { return ok; }
+    if (!err && stk == NULL)                             { err = 1;   }
+    if (!err && stk->data == NULL)                       { err = 2;   }
+    if (!err && stk->size < 0)                           { err = 3;   }
+    if (!err && stk->capacity < 1)                       { err = 4;   }
+    if (!err && stk->ded_loh_stk1 != canary1)            { err = 5;   }
+    if (!err && stk->ded_loh_stk2 != canary1)            { err = 6;   }
+    if (!err && (stk->data[-1]) != canary2)              { err = 7;   }
+    if (!err && stk->data[stk->capacity] != canary2)     { err = 8;   }
+    if (!err && stk->hash != hash_func(stk->data))       { err = 9;   }
+    if (err == 0)                                        { return ok; }
 
     printf ("Code error is {%d}, in StackAssert err is {%d}, in file = %s, in line = %ld\n", error, err, file_name, line); 
     StackDumb (stk); 
